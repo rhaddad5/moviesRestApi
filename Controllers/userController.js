@@ -20,6 +20,7 @@ exports.signup = async (req, res, next) => {
   const email = req.body.email;
   const imageUrl = req.body.imageUrl;
   let password = req.body.password;
+  const existingUser = await User.findOne({email: email})
   bcrypt.hash(password, salt, (err, encrypted) => {
     if(err) {
       console.log("erreur cryptage", err);
@@ -27,6 +28,11 @@ exports.signup = async (req, res, next) => {
       password = encrypted;
       if(!email || !password || !username || !imageUrl) {
         res.send("Field missing");
+        return;
+      };
+      if(existingUser) {
+        console.log("Email address already used")
+        res.send("Email address already used");
         return;
       };
       const newUser = new User({
