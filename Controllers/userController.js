@@ -26,13 +26,14 @@ exports.signup = async (req, res, next) => {
       console.log("erreur cryptage", err);
     } else {
       password = encrypted;
-      if(!email || !password || !username || !imageUrl) {
-        res.send("Field missing");
+      if(!email || !password || !username) {
+        console.log("Field missing");
+        res.status(404).send("Please complete all the fields");
         return;
       };
       if(existingUser) {
         console.log("Email address already used")
-        res.send("Email address already used");
+        res.status(401).send("Email already used")
         return;
       };
       const newUser = new User({
@@ -42,7 +43,8 @@ exports.signup = async (req, res, next) => {
         imageUrl: imageUrl,
       });
       newUser.save();
-      res.json(newUser);
+      console.log(newUser);
+      res.status(200).json(newUser);
       return;
     }
   });
@@ -59,13 +61,13 @@ exports.login = async (req, res) => {
         const user2 = {email: email, username: username};
         const accessToken = jwt.sign(user2, process.env.ACCES_TOKEN_SECRET);
         const refreshToken = jwt.sign(user2, process.env.REFRESH_TOKEN_SECRET)
-        res.json({accessToken: accessToken, refreshToken: refreshToken, imageUrl: imageUrl})
+        res.status(200).json({accessToken: accessToken, refreshToken: refreshToken, imageUrl: imageUrl})
       } else {
-        res.send("wrong password");
+        res.status(401).send("Wrong password");
       };
     });
   } else {
-    res.send("email not found");
+    res.status(401).send("Email not found");
   };
 };
 
@@ -73,7 +75,7 @@ exports.authenticateUser = async (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
   if(token === null) {
-    return res.sendStatut(401);
+    return res.sendStatus(401);
   }
   jwt.verify(token, process.env.ACCES_TOKEN_SECRET, (err, user) => {
     if(err) {
